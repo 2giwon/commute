@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>퇴근 경로 분석 — 이촌동 → 증미역</title>
+<meta name="description" content="이촌동에서 증미역 인근까지 퇴근 경로 3가지 비교와 9호선 급행·일반 환승 분석">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<style>
+/* 성격: 퇴근길 노선판. 차가운 종이 + 남색 표제 + 9호선 금색 · 지선버스 초록 두 개의 강조색 */
+:root {
+  color-scheme: light;
+  --font-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --page-bg:   #f2f1ec;
+  --surface:   #ffffff;
+  --ink:       #14181d;
+  --ink-2:     #4c5560;
+  --ink-3:     #838b95;
+  --rule:      #d9d6cc;
+  --rule-soft: #e9e6de;
+  --line9:     #a8893f;
+  --line9-bg:  #f4ecd7;
+  --bus:       #3f8f1c;
+  --bus-bg:    #e3f0dc;
+  --walk:      #8a929c;
+  --good:      #0f7a34;
+  --warn:      #9a6a06;
+  --bad:       #b8342f;
+  --good-bg:   #e2f1e8;
+  --warn-bg:   #f8eed7;
+  --bad-bg:    #f8e4e2;
+  --board-bg:  #121c27;
+  --board-fg:  #f1f4f8;
+  --board-key: #d9bf7a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page-bg:   #0e1115;
+    --surface:   #161b21;
+    --ink:       #e9edf2;
+    --ink-2:     #a7b0bb;
+    --ink-3:     #76808b;
+    --rule:      #2a313a;
+    --rule-soft: #1f252c;
+    --line9:     #d6b45f;
+    --line9-bg:  #2a2414;
+    --bus:       #6cc441;
+    --bus-bg:    #18291a;
+    --walk:      #7a838d;
+    --good:      #56c976;
+    --warn:      #e0ab3c;
+    --bad:       #ef6f6a;
+    --good-bg:   #14291d;
+    --warn-bg:   #2b2413;
+    --bad-bg:    #2e1b1a;
+    --board-bg:  #0a1119;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.wrap { max-width: 48rem; margin: 0 auto; padding: 0 1.25rem 4rem; }
+a { color: var(--line9); }
+b, strong { font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── 표제 ── */
+.board-head {
+  margin: 0 -1.25rem 2rem;
+  padding: 2rem 1.25rem 1.5rem;
+  background: var(--board-bg);
+  color: var(--board-fg);
+  border-bottom: 4px solid var(--line9);
+}
+.board-kicker { margin: 0 0 0.4rem; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.02em; color: var(--board-key); }
+.board-title { margin: 0 0 0.9rem; font-size: 2.2rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; }
+.board-meta {
+  display: flex; flex-wrap: wrap; gap: 0.35rem 1.4rem;
+  margin: 0; padding: 0.85rem 0 0; list-style: none;
+  border-top: 1px solid rgba(255,255,255,0.16);
+  font-size: 0.85rem;
+}
+.board-meta li { display: flex; gap: 0.4rem; align-items: baseline; }
+.board-meta dfn { font-style: normal; opacity: 0.6; }
+@media (min-width: 40rem) {
+  .board-head { margin-left: -2rem; margin-right: -2rem; padding: 2.6rem 2rem 1.8rem; }
+  .board-title { font-size: 3rem; }
+}
+
+/* ── 섹션 ── */
+section { margin: 0 0 2.75rem; }
+h2 {
+  margin: 0 0 1rem; padding-bottom: 0.45rem;
+  font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--rule);
+}
+h2 .idx { color: var(--ink-3); font-weight: 500; margin-right: 0.4rem; font-variant-numeric: tabular-nums; }
+p { margin: 0 0 0.9rem; }
+.lead { color: var(--ink-2); font-size: 0.95rem; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+}
+
+/* ── 결론 카드 ── */
+.verdict { border-left: 6px solid var(--good); }
+.verdict-label { margin: 0 0 0.3rem; font-size: 0.8rem; font-weight: 600; color: var(--good); }
+.verdict-route { margin: 0 0 0.9rem; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.35; }
+.chip {
+  display: inline-block; padding: 0.05rem 0.5rem; border-radius: 4px;
+  font-size: 0.85em; font-weight: 600; white-space: nowrap; vertical-align: 0.05em;
+}
+.chip-bus { background: var(--bus-bg); color: var(--bus); }
+.chip-9 { background: var(--line9-bg); color: var(--line9); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 0; }
+.stat { background: var(--page-bg); border-radius: 8px; padding: 0.6rem 0.7rem; }
+.stat dt { font-size: 0.75rem; color: var(--ink-3); }
+.stat dd { margin: 0; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.stat dd small { font-size: 0.75rem; font-weight: 500; color: var(--ink-2); }
+
+/* ── 경로 비교 막대 ── */
+.routes { display: grid; gap: 1rem; }
+.route-row { display: grid; gap: 0.35rem; }
+.route-name { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; font-weight: 600; }
+.signal { font-size: 0.75rem; font-weight: 600; padding: 0.05rem 0.45rem; border-radius: 999px; }
+.s-good { background: var(--good-bg); color: var(--good); }
+.s-warn { background: var(--warn-bg); color: var(--warn); }
+.s-bad  { background: var(--bad-bg);  color: var(--bad); }
+.track { position: relative; height: 26px; background: var(--rule-soft); border-radius: 5px; overflow: hidden; }
+.bar-base { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-2); }
+.bar-rush {
+  position: absolute; top: 0; bottom: 0;
+  background: repeating-linear-gradient(135deg, var(--bad) 0 5px, transparent 5px 9px);
+  opacity: 0.55;
+}
+.bar-label { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 0.5rem; font-size: 0.8rem; font-weight: 600; color: var(--surface); font-variant-numeric: tabular-nums; }
+.route-sub { font-size: 0.82rem; color: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin-top: 0.9rem; font-size: 0.78rem; color: var(--ink-3); }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 0.35rem; vertical-align: -1px; }
+.axis { position: relative; height: 1.1rem; font-size: 0.72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 0.3rem; }
+.axis span { position: absolute; top: 0; transform: translateX(-50%); }
+.axis span:first-child { transform: none; }
+
+/* ── 흐름도 ── */
+.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.flow li { display: grid; grid-template-columns: 4.2rem 1.4rem 1fr; align-items: stretch; min-height: 3rem; }
+.flow .t { font-size: 0.8rem; color: var(--ink-3); text-align: right; padding: 0.15rem 0.6rem 0 0; font-variant-numeric: tabular-nums; }
+.flow .rail { position: relative; }
+.flow .rail::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: var(--walk); }
+.flow li.seg-bus .rail::before { background: var(--bus); width: 6px; margin-left: -3px; }
+.flow li.seg-9 .rail::before { background: var(--line9); width: 6px; margin-left: -3px; }
+.flow li.seg-walk .rail::before { background: repeating-linear-gradient(var(--walk) 0 4px, transparent 4px 8px); }
+.flow li.stop .rail::after {
+  content: ''; position: absolute; left: 50%; top: 0.35rem; width: 14px; height: 14px; margin-left: -7px;
+  border-radius: 50%; background: var(--surface); border: 3px solid var(--ink);
+}
+.flow li.stop:first-child .rail::before { top: 0.6rem; }
+.flow li.stop:last-child .rail::before { bottom: auto; height: 0.6rem; }
+.flow .d { padding: 0.1rem 0 0.7rem 0.6rem; }
+.flow li.stop .d { font-weight: 600; }
+.flow .d small { display: block; font-weight: 400; font-size: 0.8rem; color: var(--ink-2); }
+
+/* ── 시간선 그림 ── */
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram .grid line { stroke: var(--rule); stroke-width: 1; }
+.diagram .grid text, .diagram .stn text { fill: var(--ink-3); font-size: 18px; font-family: var(--font-body); }
+.diagram .dot-hl { fill: var(--good); stroke: var(--surface); stroke-width: 3; }
+.diagram .lbl.lbl-sm { font-size: 15px; }
+.diagram .stn line { stroke: var(--rule-soft); stroke-width: 1; }
+.diagram .local { stroke: var(--ink-2); stroke-width: 3; fill: none; }
+.diagram .express { stroke: var(--line9); stroke-width: 4; fill: none; }
+.diagram .xfer { stroke: var(--line9); stroke-width: 2; stroke-dasharray: 4 4; fill: none; }
+.diagram .dot-l { fill: var(--ink-2); }
+.diagram .dot-x { fill: var(--line9); }
+.diagram .lbl { font-size: 18px; font-family: var(--font-body); font-weight: 600; }
+.diagram .lbl-l { fill: var(--ink-2); }
+.diagram .lbl-x { fill: var(--line9); }
+.diagram .lbl-hl { fill: var(--good); }
+.caption { margin-top: 0.8rem; font-size: 0.85rem; color: var(--ink-2); }
+
+/* ── 표 ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 0.55rem 0.6rem; text-align: left; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+th { font-size: 0.78rem; font-weight: 600; color: var(--ink-3); border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.slow td { background: var(--warn-bg); }
+tr.pick td { background: var(--good-bg); }
+@media (max-width: 30rem) {
+  table { font-size: 0.84rem; }
+  th, td { padding: 0.5rem 0.3rem; }
+}
+td .gap { display: inline-block; min-width: 2.4rem; padding: 0.05rem 0.4rem; border-radius: 4px; text-align: center; font-weight: 600; }
+.gap-long { background: var(--bad-bg); color: var(--bad); }
+.gap-mid { background: var(--warn-bg); color: var(--warn); }
+.gap-ok { background: var(--good-bg); color: var(--good); }
+
+/* ── 급행 질문 카드 ── */
+.qa { display: grid; gap: 0.75rem; }
+.qa .card { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.8rem; align-items: start; }
+.qa .mark { grid-row: span 2; font-size: 1.4rem; line-height: 1.2; }
+.qa h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+.qa p { margin: 0; font-size: 0.9rem; color: var(--ink-2); }
+
+.rule-box { margin-top: 1rem; border-left: 4px solid var(--line9); background: var(--line9-bg); border-radius: 0 8px 8px 0; padding: 0.9rem 1rem; }
+.rule-box p:last-child { margin-bottom: 0; }
+
+.caveat { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+.caveat li { padding-left: 1.4rem; position: relative; font-size: 0.9rem; color: var(--ink-2); }
+.caveat li::before { content: '!'; position: absolute; left: 0; top: 0.1rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--warn-bg); color: var(--warn); font-size: 0.7rem; font-weight: 700; text-align: center; line-height: 1rem; }
+
+.sources { font-size: 0.82rem; color: var(--ink-3); padding-left: 1.1rem; }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.78rem; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="board-head">
+  <p class="board-kicker">퇴근 경로 분석 · 평일 저녁</p>
+  <h1 class="board-title">이촌동 → 증미역</h1>
+  <ul class="board-meta">
+    <li><dfn>조사일</dfn><b class="num">2026-10-14</b></li>
+    <li><dfn>출처</dfn><b>카카오맵 길찾기 · 역 시간표</b></li>
+    <li><dfn>비교</dfn><b>경로 3개 + 9호선 급행 3가지</b></li>
+  </ul>
+</header>
+
+<!-- 1. 결론 -->
+<section>
+  <div class="card verdict">
+    <p class="verdict-label">🟢 추천 경로</p>
+    <p class="verdict-route"><span class="chip chip-bus">6211</span> → 노들역 → <span class="chip chip-9">9호선 일반</span> → 증미역</p>
+    <dl class="stats">
+      <div class="stat"><dt>평소</dt><dd>45<small>분</small></dd></div>
+      <div class="stat"><dt>퇴근시간 추정</dt><dd>50–55<small>분</small></dd></div>
+      <div class="stat"><dt>걷는 시간</dt><dd>15<small>분</small></dd></div>
+    </dl>
+  </div>
+  <p class="lead" style="margin-top:0.9rem">버스로 가는 구간이 3정거장(8분)뿐이라 막혀도 피해가 적고, 노들역은 일반열차만 서서 급행을 탈지 말지 고민할 필요가 없습니다. 6211은 <b>노량진이 아니라 노들역</b>에서 내립니다.</p>
+</section>
+
+<!-- 2. 경로 비교 -->
+<section>
+  <h2><span class="idx">01</span>경로 3개 비교</h2>
+  <div class="card">
+    <div class="routes">
+      <div class="route-row">
+        <div class="route-name">② <span class="chip chip-bus">6211</span> → 노들역 → <span class="chip chip-9">9호선</span> <span class="signal s-good">가장 빠름</span></div>
+        <div class="track">
+          <div class="bar-base" style="width:47.4%"></div>
+          <div class="bar-rush" style="left:47.4%;width:10.5%"></div>
+          <div class="bar-label">45분 → 50–55분</div>
+        </div>
+        <div class="route-sub">걷기 15분 · 환승 1회 · 앉을 가능성 중간(일반열차)</div>
+      </div>
+      <div class="route-row">
+        <div class="route-name">③ 이촌역 → 동작 환승 → <span class="chip chip-9">9호선</span> <span class="signal s-warn">많이 걸음</span></div>
+        <div class="track">
+          <div class="bar-base" style="width:63.2%"></div>
+          <div class="bar-rush" style="left:63.2%;width:5.3%"></div>
+          <div class="bar-label">60분 → 60분 안팎</div>
+        </div>
+        <div class="route-sub">걷기 30분 · 이촌역까지 15분 + 동작역 환승 통로가 김 · 지하철이라 시간은 정확함</div>
+      </div>
+      <div class="route-row">
+        <div class="route-name">① <span class="chip chip-bus">605</span> 바로 귀가 <span class="signal s-bad">막히면 가장 늦음</span></div>
+        <div class="track">
+          <div class="bar-base" style="width:71.6%"></div>
+          <div class="bar-rush" style="left:71.6%;width:23.2%"></div>
+          <div class="bar-label">68분 → 80–90분 이상</div>
+        </div>
+        <div class="route-sub">걷기 21분(정류장까지 12분) · 영등포 구간 통과 · 서울역에서 출발해 오는 버스라 자리 거의 참</div>
+      </div>
+    </div>
+    <div class="axis"><span style="left:0">0</span><span style="left:31.6%">30분</span><span style="left:63.2%">60분</span><span style="left:94.7%">90분</span></div>
+    <div class="legend">
+      <span><i style="background:var(--ink-2)"></i>평소 소요(카카오맵)</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--bad) 0 3px,transparent 3px 6px)"></i>퇴근시간 늘어나는 폭(추정)</span>
+    </div>
+  </div>
+  <p class="caption">605는 버스에 앉아 갈 수 있다는 장점보다 영등포 구간에서 막히는 시간과 들쭉날쭉함이 더 큽니다.</p>
+</section>
+
+<!-- 3. 추천 경로 흐름 -->
+<section>
+  <h2><span class="idx">02</span>추천 경로 한눈에</h2>
+  <div class="card">
+    <ol class="flow">
+      <li class="stop"><span class="t">0분</span><span class="rail"></span><span class="d">회사 (이촌동)</span></li>
+      <li class="seg-walk"><span class="t"></span><span class="rail"></span><span class="d"><small>걸어서 3분</small></span></li>
+      <li class="stop"><span class="t">3분</span><span class="rail"></span><span class="d">이촌동두산위브·한강대우아파트 정류장<small><span class="chip chip-bus">6211</span> 승차</small></span></li>
+      <li class="seg-bus"><span class="t"></span><span class="rail"></span><span class="d"><small>버스 8분 · 3정거장 · 한강대교 정체 시 +5~10분</small></span></li>
+      <li class="stop"><span class="t">11분</span><span class="rail"></span><span class="d">노들역 정류장 하차</span></li>
+      <li class="seg-walk"><span class="t"></span><span class="rail"></span><span class="d"><small>걸어서 5분 · 1번 출구로 승강장까지</small></span></li>
+      <li class="stop"><span class="t">16분</span><span class="rail"></span><span class="d">노들역 <small><span class="chip chip-9">9호선 개화 방면</span> 오는 열차 그대로 탑승</small></span></li>
+      <li class="seg-9"><span class="t"></span><span class="rail"></span><span class="d"><small>열차 22~25분 · 10개 역 · 일반열차만 정차</small></span></li>
+      <li class="stop"><span class="t">38분</span><span class="rail"></span><span class="d">증미역 하차<small>4번 출구</small></span></li>
+      <li class="seg-walk"><span class="t"></span><span class="rail"></span><span class="d"><small>걸어서 7분 · 384m</small></span></li>
+      <li class="stop"><span class="t">45분</span><span class="rail"></span><span class="d">집</span></li>
+    </ol>
+  </div>
+  <p class="caption">왼쪽 숫자는 회사에서 나온 뒤 지난 시간(평소 기준, 열차 22분 가정)입니다. 버스와 열차를 기다리는 시간은 빠져 있습니다.</p>
+</section>
+
+<!-- 4. 급행 추월 -->
+<section>
+  <h2><span class="idx">03</span>급행은 왜 빨라지지 않나</h2>
+  <p class="lead">동작역에서 급행은 일반열차보다 1~4분 늦게 출발하고, 염창역에서 <b>바로 그 일반열차</b>를 따라잡습니다. 그래서 급행으로 가서 염창에서 갈아타도 결국 같은 일반열차를 타게 됩니다.</p>
+  <div class="card diagram">
+    <svg viewBox="0 0 640 365" role="img" aria-label="동작역 18시 17분 일반열차와 18시 21분 급행이 염창역 18시 41분에 만나는 시간선 그림">
+      <g class="stn">
+        <line x1="80" y1="45" x2="615" y2="45"/><text x="70" y="51" text-anchor="end">동작</text>
+        <line x1="80" y1="90" x2="615" y2="90"/><text x="70" y="96" text-anchor="end">노들</text>
+        <line x1="80" y1="261" x2="615" y2="261"/><text x="70" y="267" text-anchor="end">염창</text>
+        <line x1="80" y1="306" x2="615" y2="306"/><text x="70" y="312" text-anchor="end">증미</text>
+      </g>
+      <g class="grid">
+        <line x1="155" y1="35" x2="155" y2="315"/><text x="155" y="345" text-anchor="middle">18:20</text>
+        <line x1="305" y1="35" x2="305" y2="315"/><text x="305" y="345" text-anchor="middle">18:30</text>
+        <line x1="455" y1="35" x2="455" y2="315"/><text x="455" y="345" text-anchor="middle">18:40</text>
+        <line x1="605" y1="35" x2="605" y2="315"/><text x="605" y="345" text-anchor="middle">18:50</text>
+      </g>
+      <polyline class="local" points="110,45 185,90 470,261 545,306"/>
+      <line class="express" x1="170" y1="45" x2="410" y2="261"/>
+      <line class="xfer" x1="410" y1="261" x2="470" y2="261"/>
+      <circle class="dot-l" cx="110" cy="45" r="6"/>
+      <circle class="dot-hl" cx="185" cy="90" r="8"/>
+      <circle class="dot-l" cx="470" cy="261" r="6"/>
+      <circle class="dot-l" cx="545" cy="306" r="6"/>
+      <circle class="dot-x" cx="170" cy="45" r="6"/>
+      <circle class="dot-x" cx="410" cy="261" r="6"/>
+      <text class="lbl lbl-l" x="96" y="26" text-anchor="middle">일반 18:17</text>
+      <text class="lbl lbl-x" x="208" y="26" text-anchor="middle">급행 18:21</text>
+      <text class="lbl lbl-hl" x="174" y="124" text-anchor="end">노들 탑승</text>
+      <text class="lbl lbl-hl" x="174" y="146" text-anchor="end">18:22</text>
+      <text class="lbl lbl-x" x="390" y="252" text-anchor="end">급행 염창 18:37</text>
+      <text class="lbl lbl-l" x="482" y="252">일반 18:41</text>
+      <text class="lbl lbl-x lbl-sm" x="440" y="288" text-anchor="middle">4분 대기</text>
+      <text class="lbl lbl-l" x="557" y="300">18:46</text>
+    </svg>
+  </div>
+  <p class="caption">세로는 역(아래로 갈수록 서쪽), 가로는 시각입니다. 금색이 급행, 회색이 일반열차입니다. 노들역에서 타는 18:22 열차가 바로 이 회색 선이라서, 노량진에서 급행으로 바꿔 타도 염창에서 같은 열차로 돌아옵니다. 역과 역 사이 선은 시작·끝 시각을 이은 것이라 중간 위치는 대략입니다.</p>
+</section>
+
+<!-- 5. 급행 질문 3가지 -->
+<section>
+  <h2><span class="idx">04</span>9호선 급행 질문 3가지</h2>
+  <div class="qa">
+    <div class="card">
+      <span class="mark">🟡</span>
+      <h3>급행 → 염창역에서 일반으로 갈아타기</h3>
+      <p>동작역에서 비슷한 시간에 출발한 일반열차와 <b>도착 시간이 같습니다.</b> 득이 되는 건 일반열차를 방금 놓쳤을 때 그 열차를 다시 잡는 경우 하나뿐입니다.</p>
+    </div>
+    <div class="card">
+      <span class="mark">🟢</span>
+      <h3>일반열차로 쭉 가기</h3>
+      <p>도착 시간은 위와 같습니다. 갈아탈 필요가 없고, 혼잡도 200%를 넘긴 적이 있는 급행보다 덜 붐빕니다.</p>
+    </div>
+    <div class="card">
+      <span class="mark">🔴</span>
+      <h3>급행 → 가양역에서 걸어가기</h3>
+      <p>가양역에서 집까지 <b>16분(994m)</b> 걸립니다. 증미역에서는 7분이라 염창 환승보다 <b>약 5분 늦습니다.</b> 예: 급행 염창 18:37 → 가양 약 18:41 → 집 18:57, 일반 증미 18:46 → 집 18:53.</p>
+    </div>
+  </div>
+  <div class="rule-box">
+    <p><b>동작역에서 타는 요령:</b> 먼저 오는 열차를 탑니다. 일반이면 증미역까지 그대로 가고, 급행이면 염창역에서 내려 다음 일반열차(시간표상 5~8분 뒤)로 갈아탑니다.</p>
+  </div>
+</section>
+
+<!-- 6. 노들역 시간표 -->
+<section>
+  <h2><span class="idx">05</span>노들역 시간표 (평일 · 개화 방면)</h2>
+  <p class="lead">증미역 시간표와 맞춰 보면 노들역에서 증미역까지 열차로 22~25분입니다. "회사 출발"은 퇴근길 정체를 감안해 열차 시각 <b>22분 전</b>으로 잡았습니다(평소라면 16분 전).</p>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr><th class="num">회사 출발</th><th class="num">노들 출발</th><th class="num">증미 도착</th><th class="num">집 도착</th><th class="num">놓치면</th></tr>
+      </thead>
+      <tbody>
+        <tr class="slow"><td class="num">17:12</td><td class="num"><b>17:34</b></td><td class="num">17:56</td><td class="num">18:03</td><td class="num"><span class="gap gap-long">11분</span></td></tr>
+        <tr class="slow"><td class="num">17:23</td><td class="num"><b>17:45</b></td><td class="num">18:07</td><td class="num">18:14</td><td class="num"><span class="gap gap-long">11분</span></td></tr>
+        <tr class="slow"><td class="num">17:34</td><td class="num"><b>17:56</b></td><td class="num">18:18</td><td class="num">18:25</td><td class="num"><span class="gap gap-long">11분</span></td></tr>
+        <tr><td class="num">17:45</td><td class="num"><b>18:07</b></td><td class="num">18:29</td><td class="num">18:36</td><td class="num"><span class="gap gap-ok">6분</span></td></tr>
+        <tr><td class="num">17:51</td><td class="num"><b>18:13</b></td><td class="num">18:38</td><td class="num">18:45</td><td class="num"><span class="gap gap-mid">9분</span></td></tr>
+        <tr class="pick"><td class="num">18:00</td><td class="num"><b>18:22</b></td><td class="num">18:46</td><td class="num">18:53</td><td class="num"><span class="gap gap-mid">8분</span></td></tr>
+        <tr><td class="num">18:08</td><td class="num"><b>18:30</b></td><td class="num">18:54</td><td class="num">19:01</td><td class="num"><span class="gap gap-mid">8분</span></td></tr>
+        <tr><td class="num">18:16</td><td class="num"><b>18:38</b></td><td class="num">19:02</td><td class="num">19:09</td><td class="num"><span class="gap gap-mid">8분</span></td></tr>
+        <tr><td class="num">18:24</td><td class="num"><b>18:46</b></td><td class="num">19:10</td><td class="num">19:17</td><td class="num"><span class="gap gap-mid">8분</span></td></tr>
+        <tr><td class="num">18:32</td><td class="num"><b>18:54</b></td><td class="num">19:18</td><td class="num">19:25</td><td class="num"><span class="gap gap-ok">7분</span></td></tr>
+        <tr><td class="num">18:39</td><td class="num"><b>19:01</b></td><td class="num">19:25</td><td class="num">19:32</td><td class="num"><span class="gap gap-ok">6분</span></td></tr>
+        <tr><td class="num">18:45</td><td class="num"><b>19:07</b></td><td class="num">19:31</td><td class="num">19:38</td><td class="num"><span class="gap gap-ok">7분</span></td></tr>
+        <tr><td class="num">18:52</td><td class="num"><b>19:14</b></td><td class="num">19:38</td><td class="num">19:45</td><td class="num"><span class="gap gap-ok">7분</span></td></tr>
+        <tr><td class="num">18:59</td><td class="num"><b>19:21</b></td><td class="num">19:45</td><td class="num">19:52</td><td class="num"><span class="gap gap-ok">7분</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--warn-bg);border:1px solid var(--warn)"></i>18시 전: 11분 간격이라 하나 놓치면 오래 기다림</span>
+    <span><i style="background:var(--good-bg);border:1px solid var(--good)"></i>예시: 18:00에 회사 출발 → 집 18:53</span>
+  </div>
+</section>
+
+<!-- 7. 확인 못 한 부분 -->
+<section>
+  <h2><span class="idx">06</span>확인 못 한 부분</h2>
+  <ul class="caveat">
+    <li><b>6211 배차간격</b>은 찾지 못했습니다. 버스를 오래 기다리면 위 계산이 밀립니다. 나가기 전에 카카오맵이나 정류장 전광판에서 도착 정보를 확인하세요.</li>
+    <li><b>퇴근시간 버스 지연</b>(막대의 빗금, "22분 전 출발")은 실제 기록이 아니라 노선 구간을 보고 추정한 값입니다. 경로 ②와 ③을 한 번씩 직접 타보며 재는 것이 가장 확실합니다.</li>
+    <li>카카오 소요시간은 오전 9시에 조회한 값이라 <b>막히지 않을 때 기준</b>입니다.</li>
+    <li>9호선 퇴근시간 칸별 혼잡도 최신 수치는 찾지 못했습니다. 검색된 자료는 2013~2015년 출근시간 기준입니다.</li>
+    <li>시간표는 <b>평일</b> 기준입니다. 토요일·휴일은 다릅니다.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="idx">07</span>출처</h2>
+  <ul class="sources">
+    <li>카카오맵 대중교통 길찾기 (2026-10-14 오전 조회)</li>
+    <li>카카오맵 역 시간표: <a href="https://place.map.kakao.com/SES0918">노들역</a> · <a href="https://place.map.kakao.com/SES0908">증미역</a> · <a href="https://place.map.kakao.com/SES0920">동작역</a> · <a href="https://place.map.kakao.com/SES0910">염창역</a></li>
+    <li><a href="https://info.koreacharts.com/citybus/seoul/route/100100289/contents.html">서울 6211번 노선</a> · <a href="https://info.koreacharts.com/citybus/seoul/route/100100090/contents.html">서울 605번 노선</a></li>
+    <li><a href="https://www.metroseoul.co.kr/article/2015100500156">메트로신문 — 9호선 급행 혼잡도</a> · <a href="https://news.seoul.go.kr/traffic/archives/13260">서울시 — 9호선 급행 증편</a></li>
+  </ul>
+</section>
+
+<footer>개인 참고용 문서입니다. 시간표와 노선은 바뀔 수 있습니다.</footer>
+</div>
+</body>
+</html>
