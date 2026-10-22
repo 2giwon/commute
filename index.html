@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>퇴근 경로 분석 — 이촌동 → 증미역</title>
-<meta name="description" content="이촌동에서 증미역 인근까지 퇴근 경로 3가지 비교와 9호선 급행·일반 환승 분석">
+<title>출퇴근 경로 분석 — 이촌동 ↔ 증미역</title>
+<meta name="description" content="증미역 인근 ↔ 이촌동 출퇴근 경로 비교: 출근은 6211 대신 동작역 4호선 환승, 퇴근은 6211 → 노들역 → 9호선 일반">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
@@ -163,6 +163,7 @@ p { margin: 0 0 0.9rem; }
 .flow .rail::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: var(--walk); }
 .flow li.seg-bus .rail::before { background: var(--bus); width: 6px; margin-left: -3px; }
 .flow li.seg-9 .rail::before { background: var(--line9); width: 6px; margin-left: -3px; }
+.flow li.seg-4 .rail::before { background: #3b8fd9; width: 6px; margin-left: -3px; }
 .flow li.seg-walk .rail::before { background: repeating-linear-gradient(var(--walk) 0 4px, transparent 4px 8px); }
 .flow li.stop .rail::after {
   content: ''; position: absolute; left: 50%; top: 0.35rem; width: 14px; height: 14px; margin-left: -7px;
@@ -223,6 +224,51 @@ td .gap { display: inline-block; min-width: 2.4rem; padding: 0.05rem 0.4rem; bor
 .caveat li { padding-left: 1.4rem; position: relative; font-size: 0.9rem; color: var(--ink-2); }
 .caveat li::before { content: '!'; position: absolute; left: 0; top: 0.1rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--warn-bg); color: var(--warn); font-size: 0.7rem; font-weight: 700; text-align: center; line-height: 1rem; }
 
+/* ── 출근/퇴근 구분 ── */
+.jump { display: flex; gap: 0.5rem; margin: 0 0 2rem; }
+.jump a {
+  flex: 1; text-align: center; text-decoration: none;
+  padding: 0.65rem 0.5rem; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--rule);
+  color: var(--ink); font-weight: 600; font-size: 0.95rem;
+}
+.jump a small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--ink-3); }
+.part-head { margin: 0 0 1.5rem; padding: 0.9rem 0 0; border-top: 3px solid var(--ink); scroll-margin-top: 1rem; }
+.part-head p { margin: 0; font-size: 0.78rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.02em; }
+.part-head h2 { border: 0; padding: 0; margin: 0.15rem 0 0; font-size: 1.7rem; }
+.chip-4 { background: #dcebf8; color: #1f6fb5; }
+@media (prefers-color-scheme: dark) { .chip-4 { background: #132638; color: #6fb2ec; } }
+
+/* ── 도착 시각 띠 ── */
+.clock { position: relative; }
+.clock-row { display: grid; grid-template-columns: 1fr; gap: 0.3rem; margin-bottom: 1rem; }
+.clock-track { position: relative; height: 26px; background: var(--rule-soft); border-radius: 5px; }
+.clock-range { position: absolute; top: 0; bottom: 0; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 600; color: var(--surface); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.r-good { background: var(--good); }
+.r-warn { background: var(--warn); }
+.r-bad { background: repeating-linear-gradient(135deg, var(--bad) 0 6px, color-mix(in srgb, var(--bad) 70%, transparent) 6px 10px); }
+.clock-deadline { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2px dashed var(--bad); }
+.clock-axis { position: relative; height: 1.1rem; font-size: 0.72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.clock-axis span { position: absolute; transform: translateX(-50%); }
+.clock-axis span:first-child { transform: none; }
+.clock-axis .dl { color: var(--bad); font-weight: 600; }
+
+.why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.why .stat { background: var(--surface); border: 1px solid var(--rule); }
+.why .stat dd { font-size: 1.15rem; }
+.why .stat p { margin: 0.2rem 0 0; font-size: 0.75rem; color: var(--ink-2); line-height: 1.4; }
+
+.trains { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0; padding: 0; list-style: none; }
+.trains li { padding: 0.3rem 0.6rem; border-radius: 6px; background: var(--surface); border: 1px solid var(--rule); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 0.9rem; }
+.trains li.hit { background: var(--good-bg); color: var(--good); font-weight: 700; }
+.trains li.late { background: var(--warn-bg); color: var(--warn); }
+
+.decide { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.8rem; }
+.decide div { border-radius: 8px; padding: 0.7rem 0.8rem; font-size: 0.88rem; }
+.decide b { display: block; font-size: 0.95rem; margin-bottom: 0.15rem; }
+.decide .go-bus { background: var(--bus-bg); }
+.decide .go-sub { background: var(--good-bg); }
+
 .sources { font-size: 0.82rem; color: var(--ink-3); padding-left: 1.1rem; }
 footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.78rem; color: var(--ink-3); }
 </style>
@@ -231,14 +277,125 @@ footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
 <div class="wrap">
 
 <header class="board-head">
-  <p class="board-kicker">퇴근 경로 분석 · 평일 저녁</p>
-  <h1 class="board-title">이촌동 → 증미역</h1>
+  <p class="board-kicker">출퇴근 경로 분석 · 평일</p>
+  <h1 class="board-title">이촌동 ↔ 증미역</h1>
   <ul class="board-meta">
-    <li><dfn>조사일</dfn><b class="num">2026-10-14</b></li>
+    <li><dfn>출근 조사</dfn><b class="num">2026-10-22</b></li>
+    <li><dfn>퇴근 조사</dfn><b class="num">2026-10-14</b></li>
     <li><dfn>출처</dfn><b>카카오맵 길찾기 · 역 시간표</b></li>
-    <li><dfn>비교</dfn><b>경로 3개 + 9호선 급행 3가지</b></li>
   </ul>
 </header>
+
+<nav class="jump">
+  <a href="#am">출근<small>8:30까지 도착</small></a>
+  <a href="#pm">퇴근<small>저녁 귀가</small></a>
+</nav>
+
+<!-- ════════ 출근 ════════ -->
+<div class="part-head" id="am">
+  <p>MORNING · 증미역 → 이촌동</p>
+  <h2>출근</h2>
+</div>
+
+<section>
+  <div class="card verdict">
+    <p class="verdict-label">🟢 추천 경로 · 버스 없이</p>
+    <p class="verdict-route"><span class="chip chip-9">9호선 급행</span> 노량진에서 내리지 않고 → 동작 → <span class="chip chip-4">4호선</span> → 이촌역 → 도보</p>
+    <dl class="stats">
+      <div class="stat"><dt>회사 도착</dt><dd>8:22<small>~8:25</small></dd></div>
+      <div class="stat"><dt>흔들림</dt><dd>적음</dd></div>
+      <div class="stat"><dt>걷는 시간</dt><dd>16<small>분</small></dd></div>
+    </dl>
+  </div>
+  <p class="lead" style="margin-top:0.9rem">버스 구간이 하나도 없어서 차가 막혀도 도착 시각이 거의 그대로입니다. 지금 타는 <b>노량진 07:48 급행</b>을 그대로 타고 두 정거장 더 가기만 하면 됩니다.</p>
+</section>
+
+<section>
+  <h2><span class="idx">A1</span>6211이 매번 늦는 이유</h2>
+  <div class="why">
+    <div class="stat"><dt>배차간격</dt><dd>11분</dd><p>한 대 놓치면 11분</p></div>
+    <div class="stat"><dt>출발지</dt><dd>신월동</dd><p>목동·영등포·신길을 거쳐 노량진에 옴</p></div>
+    <div class="stat"><dt>아침 버스 구간</dt><dd>약 20분</dd><p>평소 11분 · 출근 방향 한강대교 정체</p></div>
+  </div>
+  <p class="caption">아침 버스 구간 20분은 "7:50 도착 → 11~12분 대기 → 8:29 도착" 경험에서 거꾸로 계산한 값입니다.</p>
+</section>
+
+<section>
+  <h2><span class="idx">A2</span>회사 도착 시각 비교</h2>
+  <div class="card clock">
+    <div class="clock-row">
+      <div class="route-name">A. 동작 → <span class="chip chip-4">4호선</span> → 이촌역 <span class="signal s-good">8:22~8:25</span></div>
+      <div class="clock-track"><div class="clock-range r-good" style="left:71.1%;width:6.7%"></div><div class="clock-deadline" style="left:88.9%"></div></div>
+    </div>
+    <div class="clock-row">
+      <div class="route-name">B. 노량진 → 따릉이로 한강대교 <span class="signal s-warn">약 8:10~8:15 · 추정</span></div>
+      <div class="clock-track"><div class="clock-range r-warn" style="left:44.4%;width:11.1%"></div><div class="clock-deadline" style="left:88.9%"></div></div>
+    </div>
+    <div class="clock-row">
+      <div class="route-name">C. 노량진에서 아무 버스 → 한강대교북단 → 도보 <span class="signal s-bad">8:20 이후 + 정체</span></div>
+      <div class="clock-track"><div class="clock-range r-bad" style="left:66.7%;width:33.3%"></div><div class="clock-deadline" style="left:88.9%"></div></div>
+    </div>
+    <div class="clock-row">
+      <div class="route-name">현재: <span class="chip chip-bus">6211</span> <span class="signal s-bad">8:15~8:29</span></div>
+      <div class="clock-track"><div class="clock-range r-bad" style="left:55.6%;width:31.1%">들쭉날쭉</div><div class="clock-deadline" style="left:88.9%"></div></div>
+    </div>
+    <div class="clock-axis"><span style="left:0">7:50</span><span style="left:22.2%">8:00</span><span style="left:44.4%">8:10</span><span style="left:66.7%">8:20</span><span class="dl" style="left:88.9%">8:30</span></div>
+    <div class="legend">
+      <span><i style="border-left:2px dashed var(--bad);width:2px;border-radius:0"></i>8:30 도착 기한</span>
+      <span>막대 = 노량진 7:50 도착 기준으로 회사에 닿는 시각 범위</span>
+    </div>
+  </div>
+  <p class="caption">B는 비 오는 날 못 쓰고, 아침에 대여소에 자전거·빈 거치대가 있는지는 확인하지 못했습니다. 노들역 1번 출구 대여소에서 빌리면 한강대교 자전거 도로로 7분(카카오, 시속 20km 기준), 반납은 한강대교 북단 교차로 대여소입니다. 걸어서 건너면 노들역부터 30분입니다.</p>
+</section>
+
+<section>
+  <h2><span class="idx">A3</span>추천 경로 시각표</h2>
+  <div class="card">
+    <ol class="flow">
+      <li class="stop"><span class="t">07:48</span><span class="rail"></span><span class="d">노량진<small><span class="chip chip-9">9호선 급행</span> 내리지 않고 계속 탑승</small></span></li>
+      <li class="seg-9"><span class="t"></span><span class="rail"></span><span class="d"><small>급행 6분</small></span></li>
+      <li class="stop"><span class="t">07:54</span><span class="rail"></span><span class="d">동작역 하차</span></li>
+      <li class="seg-walk"><span class="t"></span><span class="rail"></span><span class="d"><small>4호선으로 갈아타기 5~7분 (통로가 김)</small></span></li>
+      <li class="stop"><span class="t">08:02</span><span class="rail"></span><span class="d">동작역 <small><span class="chip chip-4">4호선 이촌 방향</span> 못 타면 08:05</small></span></li>
+      <li class="seg-4"><span class="t"></span><span class="rail"></span><span class="d"><small>1개 역 · 4분</small></span></li>
+      <li class="stop"><span class="t">08:06</span><span class="rail"></span><span class="d">이촌역 하차<small>5번 출구</small></span></li>
+      <li class="seg-walk"><span class="t"></span><span class="rail"></span><span class="d"><small>걸어서 16분 · 927m</small></span></li>
+      <li class="stop"><span class="t">08:22</span><span class="rail"></span><span class="d">회사</span></li>
+    </ol>
+  </div>
+  <p class="lead" style="margin-top:1rem"><b>동작역 4호선 이촌 방향 (평일 아침)</b> — 3~4분 간격이라 하나 놓쳐도 손해가 작습니다.</p>
+  <ul class="trains">
+    <li>07:52</li><li>07:55</li><li>07:59</li><li class="hit">08:02</li><li class="hit">08:05</li><li class="late">08:09</li><li class="late">08:13</li>
+  </ul>
+  <div class="rule-box">
+    <p>⚠️ 한 대 늦은 <b>07:55 급행</b>(노량진)을 타면 동작 08:00 → 4호선 08:09 → 회사 약 <b>8:29</b>로 빠듯합니다. 지금처럼 <b>07:48 급행 이전</b> 열차를 타세요.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="idx">A4</span>6211을 계속 쓴다면: 열차 안에서 정하기</h2>
+  <p class="lead">지금 방식의 손해는 8번 출구에서 정류장까지 6분을 걸어간 <b>다음에야</b> 버스가 늦는 걸 안다는 점입니다. 그때는 지하철로 돌아가기에도 늦습니다. 여의도~노량진 사이 열차 안에서 카카오맵으로 "노량진역 정류장" 6211 도착 예정을 확인하세요.</p>
+  <div class="decide">
+    <div class="go-bus"><b>7:58 전에 온다</b>노량진에서 내려 <span class="chip chip-bus">6211</span><br>→ 회사 8:19 전후</div>
+    <div class="go-sub"><b>그보다 늦다</b>내리지 말고 동작까지<br>→ 추천 경로 (8:22~8:25)</div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="idx">A5</span>출근 — 확인 못 한 부분</h2>
+  <ul class="caveat">
+    <li><b>동작역 9→4호선 갈아타는 시간</b>은 카카오에 따로 나오지 않아 5~7분으로 잡았습니다. 하루 직접 재보면 정확해집니다.</li>
+    <li>아침 6211 버스 구간 20분은 경험에서 거꾸로 계산한 값이고, 따릉이 도착 시각도 추정입니다.</li>
+    <li>이촌역 → 회사 도보 16분은 카카오의 시속 4km 기준입니다. 빠르게 걸으면 12분 안팎입니다.</li>
+    <li>시간표는 평일 기준입니다(카카오맵 노량진·동작역 9호선, 동작역 4호선).</li>
+  </ul>
+</section>
+
+<!-- ════════ 퇴근 ════════ -->
+<div class="part-head" id="pm">
+  <p>EVENING · 이촌동 → 증미역</p>
+  <h2>퇴근</h2>
+</div>
 
 <!-- 1. 결론 -->
 <section>
@@ -430,8 +587,9 @@ footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
 <section>
   <h2><span class="idx">07</span>출처</h2>
   <ul class="sources">
-    <li>카카오맵 대중교통 길찾기 (2026-10-14 오전 조회)</li>
-    <li>카카오맵 역 시간표: <a href="https://place.map.kakao.com/SES0918">노들역</a> · <a href="https://place.map.kakao.com/SES0908">증미역</a> · <a href="https://place.map.kakao.com/SES0920">동작역</a> · <a href="https://place.map.kakao.com/SES0910">염창역</a></li>
+    <li>카카오맵 대중교통·도보·자전거 길찾기 (퇴근 2026-10-14, 출근 2026-10-22 조회)</li>
+    <li>카카오맵 역 시간표: <a href="https://place.map.kakao.com/SES0918">노들역</a> · <a href="https://place.map.kakao.com/SES0908">증미역</a> · <a href="https://place.map.kakao.com/SES0920">동작역(9호선)</a> · <a href="https://place.map.kakao.com/SES0910">염창역</a> · <a href="https://place.map.kakao.com/SES0917">노량진역(9호선)</a> · <a href="https://place.map.kakao.com/SES0431">동작역(4호선)</a></li>
+    <li>카카오맵 버스 정보: 6211 (배차간격 11분, 신월동 ↔ 상왕십리)</li>
     <li><a href="https://info.koreacharts.com/citybus/seoul/route/100100289/contents.html">서울 6211번 노선</a> · <a href="https://info.koreacharts.com/citybus/seoul/route/100100090/contents.html">서울 605번 노선</a></li>
     <li><a href="https://www.metroseoul.co.kr/article/2015100500156">메트로신문 — 9호선 급행 혼잡도</a> · <a href="https://news.seoul.go.kr/traffic/archives/13260">서울시 — 9호선 급행 증편</a></li>
   </ul>
